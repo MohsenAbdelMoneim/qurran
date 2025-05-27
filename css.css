@@ -1,0 +1,126 @@
+
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f9f9f9;
+        color: #222;
+        direction: rtl;
+        padding: 20px;
+        line-height: 1.6;
+    }
+
+    h1 {
+        text-align: center;
+        color: #0d6efd;
+        margin-bottom: 30px;
+    }
+
+    select, textarea, button {
+        display: block;
+        width: 100%;
+        max-width: 600px;
+        margin: 10px auto;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        box-sizing: border-box;
+    }
+
+    button {
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    button:hover {
+        background-color: #0b5ed7;
+    }
+
+    .loading-spinner {
+        text-align: center;
+        font-weight: bold;
+        color: #0d6efd;
+        margin: 15px 0;
+    }
+
+    #verses-container {
+        background-color: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin: 20px auto;
+        max-width: 800px;
+    }
+
+    #verses-container p {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+
+    audio {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    .correct {
+        color: green;
+        font-weight: bold;
+        background-color: #e9fbe9;
+        padding: 4px 6px;
+        border-radius: 4px;
+        margin: 2px;
+        display: inline-block;
+    }
+
+    .wrong {
+        color: red;
+        text-decoration: underline;
+        background-color: #ffe9e9;
+        padding: 4px 6px;
+        border-radius: 4px;
+        margin: 2px;
+        display: inline-block;
+    }
+
+    .playing {
+        background-color: #fff3cd;
+        border-right: 5px solid #ffc107;
+        padding-right: 10px;
+    }
+
+    #result {
+        margin-top: 20px;
+        background-color: #fdfdfd;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 8px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #stats {
+        text-align: center;
+        margin: 20px 0;
+        font-size: 18px;
+        color: #333;
+    }
+
+    canvas {
+        display: block;
+        margin: 30px auto;
+        max-width: 600px;
+        background-color: white;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    hr {
+        margin: 20px 0;
+        border: 0;
+        height: 1px;
+        background-color: #ddd;
+    }

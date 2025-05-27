@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار الحفظ - قرآن كريم</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+ <style>
+    body {
+        font-family: 'Cairo', sans-serif;
+        background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+        padding: 20px;
+        max-width: 950px;
+        margin: auto;
+        direction: rtl;
+        color: #222;
+    }
+
+    h2 {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+
+    select, input, textarea, button {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        font-size: 16px;
+    }
+
+    select:focus, input:focus, textarea:focus {
+        border-color: #3498db;
+        outline: none;
+    }
+
+    button {
+        background-color: #2ecc71;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        font-weight: bold;
+    }
+
+    button:hover {
+        background-color: #27ae60;
+    }
+
+    .verse-box {
+        background: white;
+        padding: 15px;
+        border-radius: 14px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        line-height: 2;
+        font-size: 18px;
+    }
+
+    .correct {
+        color: green;
+        font-weight: bold;
+    }
+
+    .wrong {
+        color: red;
+        background-color: #ffeaea;
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+
+    canvas {
+        margin-top: 25px;
+        background-color: white;
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    }
+
+    audio {
+        width: 100%;
+        margin-top: 15px;
+        border-radius: 10px;
+        background-color: #f4f4f4;
+    }
+
+    #stats {
+        font-size: 17px;
+        font-weight: 500;
+        color: #333;
+        background: #fff;
+        padding: 12px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 600px) {
+        body {
+            padding: 10px;
+        }
+
+        .verse-box {
+            font-size: 16px;
+        }
+
+        button {
+            font-size: 15px;
+        }
+    }
+</style>
+</head>
+<body>
+
+    <h2>📖 اختبار الحفظ</h2>
+
+    <select id="surahSelect"><option disabled selected>جاري تحميل السور...</option></select>
+
+    <input type="number" id="startAyah" placeholder="من الآية">
+    <input type="number" id="endAyah" placeholder="إلى الآية">
+
+    <select id="reciterSelect">
+        <option value="ar.minshawi">الشيخ المنشاوي</option>
+        <option value="ar.parasad">الشيخ فارس عباد</option>
+    </select>
+
+    <button onclick="loadVerses()">تحميل الآيات</button>
+
+    <div id="versesBox" class="verse-box"></div>
+
+    <audio id="audioPlayer" controls style="width: 100%; margin-top: 10px;"></audio>
+
+    <textarea id="userInput" rows="6" placeholder="اكتب الآيات من ذاكرتك..."></textarea>
+
+    <button onclick="checkMemorization()">تحقق من الحفظ</button>
+    <button onclick="showAnswer()">عرض النص الصحيح</button>
+
+    <div id="result" class="verse-box"></div>
+    <div id="stats" style="margin-top: 10px;"></div>
+
+    <canvas id="progressChart" height="100"></canvas>
+
+    <script>
+        const BASE_API = "https://api.alquran.cloud/v1/";
+        let currentVerses = [];
+        let mistakesHistory = [];
+
+        // تحميل السور
+        fetch(BASE_API + "surah")
+            .then(res => res.json())
+            .then(data => {
+                const select = document.getElementById("surahSelect");
+                select.innerHTML = '';
+                data.data.forEach(surah => {
+                    const opt = document.createElement('option');
+                    opt.value = surah.number;
+                    opt.textContent = `${surah.number}. ${surah.name}`;
+                    select.appendChild(opt);
+                });
+            });
+
+        // تحميل الآيات
+        async function loadVerses() {
+            const surah = document.getElementById('surahSelect').value;
+            const start = parseInt(document.getElementById('startAyah').value);
+            const end = parseInt(document.getElementById('endAyah').value);
+            const reciter = document.getElementById('reciterSelect').value;
+
+            const response = await fetch(`${BASE_API}surah/${surah}/${reciter}`);
+            const data = await response.json();
+
+            currentVerses = data.data.ayahs
+                .filter(ayah => ayah.numberInSurah >= start && ayah.numberInSurah <= end);
+
+            document.getElementById('versesBox').innerHTML = currentVerses.map(ayah =>
+                `<div>${ayah.text} <span class="text-muted">(${ayah.numberInSurah})</span></div>`
+            ).join('');
+
+            const audioPlayer = document.getElementById('audioPlayer');
+            if (currentVerses[0]?.audio) {
+                audioPlayer.src = currentVerses[0].audio;
+                audioPlayer.play().catch(err => console.log("تعذر تشغيل الصوت:", err));
+            } else {
+                audioPlayer.src = "";
+            }
+        }
+
+        // اختبار الحفظ
+        function checkMemorization() {
+            const userText = document.getElementById('userInput').value;
+            const originalText = currentVerses.map(v => v.text).join(' ');
+
+            const userWords = userText.trim().split(/\s+/);
+            const originalWords = originalText.trim().split(/\s+/);
+
+            let correctCount = 0;
+            let resultHTML = '';
+
+            originalWords.forEach((word, index) => {
+                const userWord = userWords[index] || '';
+                const isCorrect = userWord.trim() === word.trim();
+                if (isCorrect) {
+                    resultHTML += `<span class="correct">${word}</span> `;
+                    correctCount++;
+                } else {
+                    resultHTML += `<span class="wrong" title="الصحيح: ${word}">${userWord || '_____'}</span> `;
+                }
+            });
+
+            const accuracy = ((correctCount / originalWords.length) * 100).toFixed(1);
+            mistakesHistory.push(accuracy);
+
+            document.getElementById('result').innerHTML = resultHTML;
+            document.getElementById('stats').innerHTML =
+                `✅ الدقة: ${accuracy}% | ✅ صحيح: ${correctCount} | ❌ أخطاء: ${originalWords.length - correctCount}`;
+
+            updateChart();
+        }
+
+        function showAnswer() {
+            document.getElementById('userInput').value = currentVerses.map(v => v.text).join('\n');
+        }
+
+        // رسم بياني
+        let myChart;
+        function updateChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            if (myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: mistakesHistory.map((_, i) => `محاولة ${i + 1}`),
+                    datasets: [{
+                        label: 'نسبة الدقة',
+                        data: mistakesHistory,
+                        borderColor: '#28a745',
+                        fill: false,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
